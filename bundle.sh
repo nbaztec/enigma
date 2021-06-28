@@ -5,5 +5,5 @@ mkdir -p bundle/cards-bg
 cp build/app/outputs/flutter-apk/app.apk bundle/enigma.apk
 cp qr/cards/*.png ./bundle/cards
 cp qr/cards-bg/*.png ./bundle/cards-bg
-cp qr/sprites/sprite.png qr/sprites/sprite_bg.png ./bundle/
+cp qr/sprites/sprite_nobg.pdf qr/sprites/sprite_bg.pdf ./bundle/
 zip -r bundle.zip bundle/*

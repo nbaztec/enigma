@@ -12,6 +12,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -75,8 +76,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	makeSprite("./cards", "sprite")
+	makeSprite("./cards", "sprite_nobg")
 	makeSprite("./cards-bg", "sprite_bg")
+	makePdf("sprites", "sprite_nobg")
+	makePdf("sprites", "sprite_bg")
 }
 
 func gen(f *truetype.Font, tag, imageFile, text, bgTemplate, destDir string) {
@@ -288,7 +291,7 @@ func makeSprite(srcDir, name string) {
 	}
 
 	var outFiles []string
-	chunkSize := 10
+	chunkSize := 5
 	for i := 0; i < len(cards); i += chunkSize {
 		end := i + chunkSize
 
@@ -302,8 +305,13 @@ func makeSprite(srcDir, name string) {
 			subCards = append(subCards, v)
 		}
 
+		fmt.Println(">", subCards)
+		for j := len(subCards); j < chunkSize; j++ {
+			subCards = append(subCards, "./card-tpl-blank.png")
+		}
+
 		subCards = append(subCards, "+append", outFile)
-		fmt.Println(subCards)
+		fmt.Println("convert", subCards)
 		cmd := exec.Command("convert", subCards...)
 		if err := cmd.Run(); err != nil {
 			log.Fatalf("failed to partial sprite qr: %s", err)
@@ -316,5 +324,47 @@ func makeSprite(srcDir, name string) {
 	cmd := exec.Command("convert", outFiles...)
 	if err := cmd.Run(); err != nil {
 		log.Fatalf("failed to sprite: %s", err)
+	}
+}
+
+func makePdf(srcDir, name string) {
+	files, err := ioutil.ReadDir(srcDir)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var sprites []string
+	for _, f := range files {
+		if strings.HasPrefix(f.Name(), name+"_") && strings.HasSuffix(f.Name(), ".png") {
+			sprites = append(sprites, fmt.Sprintf("%s/%s", srcDir, f.Name()))
+		}
+	}
+
+	// rotate
+	rotatedName := fmt.Sprintf("rotated_%s", name)
+	sprites = append(sprites, path.Join(srcDir, fmt.Sprintf("%s_%%d.png", rotatedName)))
+	params := append([]string{"-rotate", "270"}, sprites...)
+	cmd := exec.Command("convert", params...)
+	if err := cmd.Run(); err != nil {
+		log.Fatalf("failed to rotate sprites: %s", err)
+	}
+
+	files, err = ioutil.ReadDir(srcDir)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var rotatedSprites []string
+	for _, f := range files {
+		if strings.HasPrefix(f.Name(), rotatedName+"_") && strings.HasSuffix(f.Name(), ".png") {
+			rotatedSprites = append(rotatedSprites, fmt.Sprintf("%s/%s", srcDir, f.Name()))
+		}
+	}
+
+	rotatedSprites = append(rotatedSprites, path.Join(srcDir, fmt.Sprintf("%s.pdf", name)))
+	params = append([]string{"-page", "a4+100+0"}, rotatedSprites...)
+	cmd = exec.Command("convert", params...)
+	if err := cmd.Run(); err != nil {
+		log.Fatalf("failed to pdf: %s", err)
 	}
 }
