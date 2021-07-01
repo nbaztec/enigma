@@ -1,14 +1,13 @@
 import 'dart:io';
 
+import 'package:enigma/adventure.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:enigma/levels.dart';
 import 'package:enigma/l18n.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'alerts.dart';
-import 'items.dart';
 
 const String SHARED_PREF_LEVEL_INDEX = 'levelIndex';
 const String SHARED_PREF_GAME_OVER = 'gameOver';
@@ -19,13 +18,16 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final sharedPreferences = await SharedPreferences.getInstance();
 
-  runApp(EnigmaApp(sharedPreferences: sharedPreferences));
+  var adventure = await load('assets/adventure.yaml');
+
+  runApp(EnigmaApp(sharedPreferences: sharedPreferences, adventure: adventure));
 }
 
 class EnigmaApp extends StatelessWidget {
   final SharedPreferences sharedPreferences;
+  final Adventure adventure;
 
-  EnigmaApp({Key? key, required this.sharedPreferences}) : super(key: key);
+  EnigmaApp({Key? key, required this.sharedPreferences, required this.adventure}) : super(key: key);
 
   // This widget is the root of your application.
   @override
@@ -47,18 +49,20 @@ class EnigmaApp extends StatelessWidget {
       home: GamePage(
         title: '',
         sharedPreferences: sharedPreferences,
+        adventure: adventure,
       ),
     );
   }
 }
 
 class GamePage extends StatefulWidget {
-  GamePage({Key? key, required this.title, required this.sharedPreferences}) : super(key: key);
+  GamePage({Key? key, required this.title, required this.sharedPreferences, required this.adventure}) : super(key: key);
   final SharedPreferences sharedPreferences;
+  final Adventure adventure;
   final String title;
 
   @override
-  _GamePageState createState() => _GamePageState(sharedPreferences: sharedPreferences);
+  _GamePageState createState() => _GamePageState(sharedPreferences: sharedPreferences, adventure: adventure);
 }
 
 enum _ScanMode {
@@ -71,11 +75,13 @@ enum _ScanMode {
 
 class _GamePageState extends State<GamePage> {
   static const int MAX_ITEMS = 4;
+  final Adventure adventure;
   final SharedPreferences sharedPreferences;
 
   int _itemCount = MAX_ITEMS;
   List<Item?> _items = List.filled(MAX_ITEMS, null);
-  var _levels = GameLevels;
+
+  // var _levels = GameLevels;
   var _levelIndex = 0;
   var _gameOver = false;
 
@@ -91,9 +97,11 @@ class _GamePageState extends State<GamePage> {
   QRViewController? _qrController;
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
 
-  _GamePageState({required this.sharedPreferences}) : super() {
+  _GamePageState({required this.sharedPreferences, required this.adventure}) : super() {
     _loadPreferences();
   }
+
+  locale(context) => Localizations.localeOf(context).toString();
 
   void _scanResetLevel() {
     setState(() {
@@ -112,14 +120,14 @@ class _GamePageState extends State<GamePage> {
   }
 
   void _resetLevel(BuildContext context, Item? scannedItem) {
-    if (scannedItem == Items.ELIXIR) {
+    if (scannedItem?.id == adventure.specialItems.pass) {
       showSuccessDialog(context, l18n(context).successMessageResetLevelElixir, () {
         _doLevelReset();
       });
       return;
     }
 
-    if (scannedItem != Items.HOURGLASS) {
+    if (scannedItem?.id != adventure.specialItems.reset) {
       showAlertDialog(context, l18n(context).errItemResetLevelWrong);
       return;
     }
@@ -148,14 +156,14 @@ class _GamePageState extends State<GamePage> {
   }
 
   void _resetGame(BuildContext context, Item? scannedItem) {
-    if (scannedItem == Items.ELIXIR) {
+    if (scannedItem?.id == adventure.specialItems.pass) {
       showSuccessDialog(context, l18n(context).successMessageResetGameElixir, () {
         _doGameReset();
       });
       return;
     }
 
-    if (scannedItem != Items.HOURGLASS) {
+    if (scannedItem?.id != adventure.specialItems.reset) {
       showAlertDialog(context, l18n(context).errItemResetGameWrong);
       return;
     }
@@ -201,7 +209,8 @@ class _GamePageState extends State<GamePage> {
         if (scanData.format == BarcodeFormat.qrcode) {
           var scanMode = _scanMode;
           _scanMode = _ScanMode.none;
-          _scannedItem = decodeStringToItem(scanData.code);
+
+          _scannedItem = adventure.items[scanData.code];
           print('scanned=${_scannedItem == null ? 'null' : _scannedItem!.id}');
           if (!bounceBack) {
             bounceBack = true;
@@ -260,7 +269,7 @@ class _GamePageState extends State<GamePage> {
 
   void _addItem(BuildContext context) {
     if (_itemCount < 0) {
-      showAlertDialog(context, l18n(context).errScanIndexNull);
+      showAlertDialog(context, l18n(context).errItemsExceeded);
       return;
     }
 
@@ -284,7 +293,7 @@ class _GamePageState extends State<GamePage> {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${l18n(context).added} ${itemFriendlyName(context, _scannedItem!)}!')));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${l18n(context).added} ${_scannedItem!.name(locale(context))}!')));
     setState(() {
       _items[_scanIndex!] = _scannedItem!;
       _scannedItem = null;
@@ -295,20 +304,25 @@ class _GamePageState extends State<GamePage> {
   }
 
   bool _checkItems() {
-    var level = _levels[_levelIndex];
-    print('exact=${level.exactSolution} ${_items.toString()} ${level.solution.toString()}');
+    var level = adventure.levels[_levelIndex];
+    print('solutionType=${level.solution.type} ${_items.toString()} ${level.solution.toString()}');
 
-    if (level.exactSolution) {
-      var validItems = _items.where((element) => element != null);
-      return validItems == level.solution;
-    }
+    var currentItemIds = _items.where((element) => element != null).map((e) => e!.id).toList();
 
-    for (final item in level.solution) {
-      if (!_items.contains(item)) {
+    switch (level.solution.type) {
+      case SolutionType.exact:
+        return listEquals(currentItemIds, level.solution.items);
+      case SolutionType.all:
+        for (final item in level.solution.items) {
+          if (!currentItemIds.contains(item)) {
+            return false;
+          }
+        }
+        return true;
+      default:
+        print("solution type is invalid");
         return false;
-      }
     }
-    return true;
   }
 
   void _scanValidateLevel(BuildContext context) {
@@ -319,13 +333,13 @@ class _GamePageState extends State<GamePage> {
 
   void _beginNextLevel() {
     setState(() {
-      if (_levelIndex < _levels.length) {
+      if (_levelIndex < adventure.levels.length) {
         _levelIndex++;
 
         _itemCount = MAX_ITEMS;
         _items.fillRange(0, MAX_ITEMS, null);
       }
-      if (_levelIndex >= _levels.length) {
+      if (_levelIndex >= adventure.levels.length) {
         _gameOver = true;
       }
       _storePreferences();
@@ -333,14 +347,14 @@ class _GamePageState extends State<GamePage> {
   }
 
   void _validateLevel(BuildContext context, Item? scannedItem) {
-    if (scannedItem == Items.ELIXIR) {
+    if (scannedItem?.id == adventure.specialItems.pass) {
       showSuccessDialog(context, l18n(context).successMessageElixir, () {
         _beginNextLevel();
       });
       return;
     }
 
-    if (scannedItem != Items.MAGIC_BALL) {
+    if (scannedItem?.id != adventure.specialItems.check) {
       showAlertDialog(context, l18n(context).errItemValidateWrong);
       return;
     }
@@ -356,7 +370,7 @@ class _GamePageState extends State<GamePage> {
   }
 
   Image _itemImage(int index) {
-    var item = _items[index] == null ? Items.QR : _items[index]!;
+    var item = _items[index] == null ? adventure.items[adventure.specialItems.scan]! : _items[index]!;
     return Image.asset('assets/images/${item.image}');
   }
 
@@ -380,7 +394,7 @@ class _GamePageState extends State<GamePage> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             Image.asset(
-              'assets/images/${Items.ENIGMA.image}',
+              'assets/images/enigma.png',
               height: 256,
             ),
             ElevatedButton(
@@ -407,7 +421,7 @@ class _GamePageState extends State<GamePage> {
               Column(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
                 SizedBox(
                   height: 150,
-                  child: Image.asset('assets/images/${Items.GIFT.image}'),
+                  child: Image.asset('assets/images/gift.png'),
                 ),
                 Padding(
                   padding: EdgeInsets.fromLTRB(0, 50, 0, 0),
@@ -446,9 +460,8 @@ class _GamePageState extends State<GamePage> {
   Widget _gameScreen(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: _levelIndex < _levels.length ? Text('${l18n(context).stage}: ${levelFriendlyName(context, _levels[_levelIndex])}') : Text(''),
+        title:
+            _levelIndex < adventure.levels.length ? Text('${l18n(context).stage}: ${adventure.levels[_levelIndex].name(locale(context))}') : Text(''),
       ),
       body: _scanMode == _ScanMode.none ? _playScreen(context) : _scanScreen(context),
       floatingActionButton: _scanMode == _ScanMode.none ? _buttonsPlayScreen() : _buttonsScanScreen(),
@@ -557,12 +570,12 @@ class _GamePageState extends State<GamePage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                Text('${l18n(context).itemsLeftYouHave} '),
+                Text('${l18n(context).itemsLeftYouNeed} '),
                 Text(
-                  '$_itemCount',
+                  '${_solutionItemCount()}',
                   style: Theme.of(context).textTheme.headline5,
                 ),
-                Text(' ${_itemCount == 1 ? l18n(context).item : l18n(context).items} ${l18n(context).itemsLeft}'),
+                Text(' ${_solutionItemCount() == 1 ? l18n(context).item : l18n(context).items} ${l18n(context).itemsLeftSucceed}'),
               ],
             ),
             const Divider(
@@ -576,6 +589,8 @@ class _GamePageState extends State<GamePage> {
         ),
       );
 
+  _solutionItemCount() => adventure.levels[_levelIndex].solution.items.length;
+
   _scanScreen(BuildContext context) => Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -584,13 +599,13 @@ class _GamePageState extends State<GamePage> {
               switch (_scanMode) {
                 case _ScanMode.verify:
                   return Text(
-                    l18n(context).itemMagicBall,
+                    adventure.items[adventure.specialItems.check]!.name(locale(context)),
                     textScaleFactor: 1.5,
                   );
                 case _ScanMode.resetLevel:
                 case _ScanMode.resetGame:
                   return Text(
-                    l18n(context).itemHourglass,
+                    adventure.items[adventure.specialItems.reset]!.name(locale(context)),
                     textScaleFactor: 1.5,
                   );
                 case _ScanMode.item:
@@ -620,6 +635,6 @@ class _GamePageState extends State<GamePage> {
     _gameOver = sharedPreferences.getBool(SHARED_PREF_GAME_OVER) ?? false;
     _itemCount = sharedPreferences.getInt(SHARED_PREF_ITEM_COUNT) ?? MAX_ITEMS;
     var items = sharedPreferences.getStringList(SHARED_PREF_ITEMS) ?? List.filled(MAX_ITEMS, '');
-    _items = items.map((e) => e == '' ? null : decodeStringToItem(e)).toList();
+    _items = items.map((e) => e == '' ? null : adventure.items[e]).toList();
   }
 }

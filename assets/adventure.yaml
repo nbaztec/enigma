@@ -1,0 +1,239 @@
+name: bastian_lisa_wedding
+items:
+  - id: "NULL"
+    image: null.png
+    i18n:
+      de: Nüll
+      en: "Null"
+  - id: MAGIC_BALL
+    image: magic_ball.png
+    i18n:
+      de: Oracle
+      en: Oracle
+  - id: HOURGLASS
+    image: hourglass.png
+    i18n:
+      de: Sanduhr
+      en: Hourglass
+  - id: ELIXIR
+    image: elixir.png
+    i18n:
+      de: Elixier
+      en: Elixir
+  - id: QR
+    image: qr.png
+    i18n:
+      de: QR
+      en: QR
+  - id: SNOWBOARD
+    image: snowboard.png
+    i18n:
+      de: Snowboard
+      en: Snowboard
+  - id: HELMET
+    image: helmet.png
+    i18n:
+      de: Helm
+      en: Helmet
+  - id: SNOW_BOOTS
+    image: snow_boots.png
+    i18n:
+      de: Snowboardschuhe
+      en: Snow Boots
+  - id: HIKE_BOOTS
+    image: hike_boots.png
+    i18n:
+      de: Wanderschuhe
+      en: Hiking Boots
+  - id: HEAD_LIGHT
+    image: head_light.png
+    i18n:
+      de: Stirnlampe
+      en: Head Lamp
+  - id: WATER_BOTTLE
+    image: water_bottle.png
+    i18n:
+      de: Wasserflasche
+      en: Water Bottle
+  - id: HOT_POT
+    image: hot_pot.png
+    i18n:
+      de: Hot Pot
+      en: Hot Pot
+  - id: VEGETABLES
+    image: vegetables.png
+    i18n:
+      de: Gemüse
+      en: Vegetables
+  - id: CHOPSTICKS
+    image: chopsticks.png
+    i18n:
+      de: Stäbchen
+      en: Chopsticks
+  - id: CANDLE
+    image: candle.png
+    i18n:
+      de: Kerze
+      en: Candle
+  - id: LIGHTER
+    image: lighter.png
+    i18n:
+      de: Feuerzeug
+      en: Lighter
+  - id: AIRPLANE
+    image: airplane.png
+    i18n:
+      de: Flugzeug
+      en: Airplane
+  - id: TICKETS
+    image: tickets.png
+    i18n:
+      de: Tickets
+      en: Tickets
+  - id: KEYS
+    image: keys.png
+    i18n:
+      de: Schlüssel
+      en: Keys
+  - id: KNIFE
+    image: knife.png
+    i18n:
+      de: Stumpfes Messer
+      en: Knife
+  - id: SHARP_STONE
+    image: sharp_stone.png
+    i18n:
+      de: Schleifstein
+      en: Sharp Stone
+  - id: X_SCREWDRIVER
+    image: x_screwdriver.png
+    i18n:
+      de: Kreuzschraubenzieher
+      en: X Screwdriver
+  - id: FLAT_SCREWDRIVER
+    image: flat_screwdriver.png
+    i18n:
+      de: Schlitzschraubenzieher
+      en: Flat Screwdriver
+  - id: ALLEN_KEY
+    image: allen_key.png
+    i18n:
+      de: Imbus
+      en: Allen Key
+  - id: DRILL
+    image: drill.png
+    i18n:
+      de: Akkuschrauber
+      en: Drill
+  - id: NUM_4
+    image: 4.png
+    i18n:
+      de: "4"
+      en: "4"
+  - id: NUM_2
+    image: 2.png
+    i18n:
+      de: "2"
+      en: "2"
+  - id: NUM_20
+    image: 20.png
+    i18n:
+      de: "20"
+      en: "20"
+  - id: NUM_13
+    image: 13.png
+    i18n:
+      de: "13"
+      en: "13"
+  - id: NUM_21
+    image: 21.png
+    i18n:
+      de: "21"
+      en: "21"
+  - id: NUM_31
+    image: 31.png
+    i18n:
+      de: "31"
+      en: "31"
+special_items:
+  scan: QR
+  check: MAGIC_BALL
+  reset: HOURGLASS
+  pass: ELIXIR
+levels:
+  - id: SKI
+    solution:
+      type: ALL
+      items:
+        - SNOWBOARD
+        - HELMET
+        - SNOW_BOOTS
+    i18n:
+      de: "Ski Urlaub"
+      en: "Ski Trip"
+  - id: HIKING
+    solution:
+      type: ALL
+      items:
+        - HIKE_BOOTS
+        - WATER_BOTTLE
+        - HEAD_LIGHT
+    i18n:
+      de: "Wandern Urlaub"
+      en: "Hiking Trip"
+  - id: CHINA
+    solution:
+      type: ALL
+      items:
+        - HOT_POT
+        - VEGETABLES
+        - CHOPSTICKS
+    i18n:
+      de: "Reise nach China"
+      en: "Trip to China"
+  - id: RETURN
+    solution:
+      type: ALL
+      items:
+        - AIRPLANE
+        - TICKETS
+    i18n:
+      de: "Die Heimkehr"
+      en: "Return Home"
+  - id: PADLOCK
+    solution:
+      type: ALL
+      items:
+        - KEYS
+    i18n:
+      de: "Ein Vorhängeschloss"
+      en: "A Padlock"
+  - id: TAPE
+    solution:
+      type: ALL
+      items:
+        - KNIFE
+        - SHARP_STONE
+    i18n:
+      de: "In Klebeband versiegelt"
+      en: "Sealed in Tape"
+  - id: SCREWS
+    solution:
+      type: ALL
+      items:
+        - X_SCREWDRIVER
+        - FLAT_SCREWDRIVER
+    i18n:
+      de: "Verschraubter Verschluss"
+      en: "Screwed Shut"
+  - id: NUM_CODE
+    solution:
+      type: EXACT
+      items:
+        - NUM_4
+        - NUM_2
+        - NUM_20
+        - NUM_13
+    i18n:
+      de: "Code-Sperre"
+      en: "Code Lock"
