@@ -1,8 +1,6 @@
 package main
 
 import (
-	"bufio"
-	"encoding/json"
 	"fmt"
 	"image"
 	"image/color"
@@ -14,22 +12,30 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
-	"regexp"
 	"strings"
 
 	"github.com/golang/freetype"
 	"github.com/golang/freetype/truetype"
+	"gopkg.in/yaml.v2"
 )
+
+type Adventure struct {
+	Items []Item
+}
+type Item struct {
+	ID    string
+	Image string
+	I18n  map[string]string
+}
 
 func main() {
 	// cards, err := getCards()
 	// if err != nil {
 	// 	log.Fatalf("failed reading cards: %s", err)
 	// }
-	data := readTranslations()
-	// fmt.Println(data)
-	// fmt.Println(toCamelCase(strings.ToLower("NUM_1"), true))
-	// return
+	// dataEN := readTranslations("en")
+	// dataDE := readTranslations("de")
+
 	fontBytes, err := ioutil.ReadFile("impact.ttf")
 	if err != nil {
 		log.Panicln(err)
@@ -39,41 +45,21 @@ func main() {
 		log.Panicln(err)
 	}
 
-	items, err := os.Open("../lib/items.dart")
-	defer items.Close()
-
-	scanner := bufio.NewScanner(items)
-	start := false
-	// re := regexp.MustCompile(`'[A-Z_0-9]+'`)
-	// const Item('MAGIC_BALL', 'magic_ball.png')
-	re := regexp.MustCompile(`const Item\('([A-Z_0-9]+)', '([a-z_\d-\.]+)'`)
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		if start && line == "}" {
-			start = false
-		}
-
-		if start {
-			if matches := re.FindStringSubmatch(line); matches != nil {
-				tag := matches[1]
-				file := matches[2]
-				text := tag
-				text = strings.Title(strings.ToLower(strings.ReplaceAll(text, "_", " ")))
-				id := "item" + toCamelCase(strings.ToLower(text), true)
-				translatedText := data[id]
-				gen(f, tag, file, translatedText, "card-tpl.png", "cards")
-				gen(f, tag, file, translatedText, "card-tpl-bg.png", "cards-bg")
-				// break
-			}
-		}
-
-		if line == "class Items {" {
-			start = true
-		}
+	adventureBytes, err := ioutil.ReadFile("../assets/adventure.yaml")
+	if err != nil {
+		log.Panicln(err)
 	}
 
-	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
+	adventure := Adventure{}
+	err = yaml.Unmarshal(adventureBytes, &adventure)
+	if err != nil {
+		log.Fatalf("error: %v", err)
+	}
+
+	language := "de"
+	for _, item := range adventure.Items {
+		gen(f, item.ID, item.Image, item.I18n[language], "card-tpl.png", "cards")
+		gen(f, item.ID, item.Image, item.I18n[language], "card-tpl-bg.png", "cards-bg")
 	}
 
 	makeSprite("./cards", "sprite_nobg")
@@ -173,36 +159,6 @@ func gen(f *truetype.Font, tag, imageFile, text, bgTemplate, destDir string) {
 	defer output.Close()
 }
 
-func readTranslations() map[string]string {
-	f, err := os.Open("../lib/l10n/app_de.arb")
-	defer f.Close()
-
-	b, err := ioutil.ReadAll(f)
-	if err != nil {
-
-		log.Fatalf("failed to read translation file: %s", err)
-	}
-	var data map[string]string
-	if err := json.Unmarshal(b, &data); err != nil {
-		log.Fatalf("failed to decode translation file: %s", err)
-	}
-
-	ignore := []string{
-		"itemsLeftYouHave",
-		"item",
-		"items",
-		"itemsLeft",
-	}
-	items := map[string]string{}
-	for k, v := range data {
-		if strings.HasPrefix(k, "item") && !inSlice(k, ignore) {
-			items[k] = v
-		}
-	}
-	return items
-
-}
-
 func inSlice(a string, list []string) bool {
 	for _, b := range list {
 		if b == a {
@@ -210,49 +166,6 @@ func inSlice(a string, list []string) bool {
 		}
 	}
 	return false
-}
-
-var uppercaseAcronym = map[string]string{
-	"ID": "id",
-}
-
-func toCamelCase(s string, initCase bool) string {
-	s = strings.TrimSpace(s)
-	if s == "" {
-		return s
-	}
-	if a, ok := uppercaseAcronym[s]; ok {
-		s = a
-	}
-
-	n := strings.Builder{}
-	n.Grow(len(s))
-	capNext := initCase
-	for i, v := range []byte(s) {
-		vIsCap := v >= 'A' && v <= 'Z'
-		vIsLow := v >= 'a' && v <= 'z'
-		if capNext {
-			if vIsLow {
-				v += 'A'
-				v -= 'a'
-			}
-		} else if i == 0 {
-			if vIsCap {
-				v += 'a'
-				v -= 'A'
-			}
-		}
-		if vIsCap || vIsLow {
-			n.WriteByte(v)
-			capNext = false
-		} else if vIsNum := v >= '0' && v <= '9'; vIsNum {
-			n.WriteByte(v)
-			capNext = true
-		} else {
-			capNext = v == '_' || v == ' ' || v == '-' || v == '.'
-		}
-	}
-	return n.String()
 }
 
 func getCards() ([]string, error) {
