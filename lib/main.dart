@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 
 import 'package:enigma/adventure.dart';
 import 'package:flutter/foundation.dart';
@@ -18,9 +19,30 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final sharedPreferences = await SharedPreferences.getInstance();
 
-  var adventure = await load('assets/adventure.yaml');
+  try {
+    var adventure = await load('assets/adventure.yaml');
 
-  runApp(EnigmaApp(sharedPreferences: sharedPreferences, adventure: adventure));
+    runApp(EnigmaApp(sharedPreferences: sharedPreferences, adventure: adventure));
+  } on Exception catch (e) {
+    runApp(StartupError(error: e.toString()));
+  }
+}
+
+class StartupError extends StatelessWidget {
+  final String error;
+
+  StartupError({Key? key, required this.error}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Text(
+        error,
+        textDirection: TextDirection.ltr,
+        style: TextStyle(fontSize: 20),
+      ),
+    );
+  }
 }
 
 class EnigmaApp extends StatelessWidget {
@@ -80,15 +102,10 @@ class _GamePageState extends State<GamePage> {
 
   int _itemCount = MAX_ITEMS;
   List<Item?> _items = List.filled(MAX_ITEMS, null);
-
-  // var _levels = GameLevels;
   var _levelIndex = 0;
   var _gameOver = false;
 
-  // var _scan = false;
   var _scanIndex;
-
-  // var _verifyScan = false;
   Item? _scannedItem;
   var _startup = true;
 
@@ -397,6 +414,14 @@ class _GamePageState extends State<GamePage> {
               'assets/images/enigma.png',
               height: 256,
             ),
+            // Text(adventure.name),
+            Column(children: [
+              _lisaAndBastianScreen(),
+              Padding(
+                padding: EdgeInsets.fromLTRB(0, 10, 0, 0),
+                child: Text('EDITION', style: const TextStyle(fontSize: 12, color: Colors.black38)),
+              ),
+            ]),
             ElevatedButton(
               onPressed: () {
                 setState(() {
@@ -410,52 +435,54 @@ class _GamePageState extends State<GamePage> {
         ),
       ));
 
+
   Widget _finishScreen(BuildContext context) => Scaffold(
-        appBar: AppBar(
-          title: Text('Enigma: ${l18n(context).solved}'),
-        ),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: <Widget>[
-              Column(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
-                SizedBox(
-                  height: 150,
-                  child: Image.asset('assets/images/gift.png'),
-                ),
-                Padding(
-                  padding: EdgeInsets.fromLTRB(0, 50, 0, 0),
-                  child: Text(
-                    l18n(context).congratulations,
-                    textScaleFactor: 2.0,
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ]),
-              const Divider(
-                height: 20,
-                thickness: 5,
-                indent: 20,
-                endIndent: 20,
+      appBar: AppBar(
+        title: Text('Enigma: ${l18n(context).solved}'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: <Widget>[
+            _lisaAndBastianScreen(),
+            Column(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
+              SizedBox(
+                height: 150,
+                child: Image.asset('assets/images/gift.png'),
               ),
-              SizedBox(height: 50),
-            ],
-          ),
-        ),
-        floatingActionButton: Wrap(
-          alignment: WrapAlignment.spaceBetween,
-          spacing: 100,
-          children: [
-            FloatingActionButton(
-              backgroundColor: Colors.redAccent,
-              onPressed: _doGameReset,
-              heroTag: null,
-              tooltip: l18n(context).resetGame,
-              child: Icon(Icons.replay),
+              Padding(
+                padding: EdgeInsets.fromLTRB(0, 50, 0, 0),
+                child: Text(
+                  l18n(context).congratulations,
+                  textScaleFactor: 2.0,
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ]),
+            const Divider(
+              height: 5,
+              thickness: 3,
+              indent: 20,
+              endIndent: 20,
             ),
+            SizedBox(height: 50),
           ],
         ),
-      );
+      ),
+      floatingActionButton: Wrap(
+        alignment: WrapAlignment.spaceBetween,
+        spacing: 100,
+        children: [
+          FloatingActionButton(
+            backgroundColor: Colors.redAccent,
+            onPressed: _doGameReset,
+            heroTag: null,
+            tooltip: l18n(context).resetGame,
+            child: Icon(Icons.replay),
+          ),
+        ],
+      ),
+    );
 
   Widget _gameScreen(BuildContext context) {
     return Scaffold(
@@ -467,6 +494,15 @@ class _GamePageState extends State<GamePage> {
       floatingActionButton: _scanMode == _ScanMode.none ? _buttonsPlayScreen() : _buttonsScanScreen(),
     );
   }
+
+  Widget _lisaAndBastianScreen() => Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text('Lisa ', style: const TextStyle(fontSize: 30, fontFamily: 'Parisienne')),
+          Image.asset('assets/images/rings.png', height: 48),
+          Text(' Bastian', style: const TextStyle(fontSize: 30, fontFamily: 'Parisienne')),
+        ],
+      );
 
   _buttonsPlayScreen() => Wrap(
         // mainAxisAlignment: MainAxisAlignment.spaceBetween,

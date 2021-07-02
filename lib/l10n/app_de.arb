@@ -1,7 +1,7 @@
 {
     "stage": "Stufe",
     "level": "Level",
-    "itemsLeftYouNeed": "Ihr braucht",
+    "itemsLeftYouNeed": "",
     "item": "Gegenstand",
     "items": "Gegenstände",
     "itemsLeftSucceed": "um erfolgreich zu sein",
