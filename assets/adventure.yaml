@@ -55,41 +55,66 @@ items:
     i18n:
       de: Wasserflasche
       en: Water Bottle
+  - id: BOOKS
+    image: books.png
+    i18n:
+      de: Bücher
+      en: Books
+  - id: COMPUTER
+    image: computer.png
+    i18n:
+      de: Computer
+      en: Computer
+  - id: SEMESTER_TICKET
+    image: ticket.png
+    i18n:
+      de: Semesterticket
+      en: Semester Ticket
   - id: HOT_POT
     image: hot_pot.png
     i18n:
       de: Hot Pot
       en: Hot Pot
-  - id: VEGETABLES
-    image: vegetables.png
-    i18n:
-      de: Gemüse
-      en: Vegetables
-  - id: CHOPSTICKS
-    image: chopsticks.png
-    i18n:
-      de: Stäbchen
-      en: Chopsticks
-  - id: CANDLE
-    image: candle.png
-    i18n:
-      de: Kerze
-      en: Candle
-  - id: LIGHTER
-    image: lighter.png
-    i18n:
-      de: Feuerzeug
-      en: Lighter
   - id: AIRPLANE
     image: airplane.png
     i18n:
       de: Flugzeug
       en: Airplane
-  - id: TICKETS
-    image: tickets.png
+  - id: CHOPSTICKS
+    image: chopsticks.png
     i18n:
-      de: Tickets
-      en: Tickets
+      de: Stäbchen
+      en: Chopsticks
+  - id: SOFA
+    image: sofa.png
+    i18n:
+      de: Sofa
+      en: Sofa
+  - id: FRIDGE
+    image: fridge.png
+    i18n:
+      de: Kühlschrank
+      en: Refrigerator
+  - id: TABLE
+    image: table.png
+    i18n:
+      de: Tisch
+      en: Table
+  - id: SYNTHESIZER
+    image: synthesizer.png
+    i18n:
+      de: E-Piano
+      en: Synthesizer
+  - id: SURFBOARD
+    image: surfboard.png
+    i18n:
+      de: Surfbrett
+      en: Surfboard
+  - id: RUNNING_SHOES
+    image: running_shoes.png
+    i18n:
+      de: Joggingschuhe
+      en: Running Shoes
   - id: KEYS
     image: keys.png
     i18n:
@@ -105,26 +130,11 @@ items:
     i18n:
       de: Schleifstein
       en: Sharp Stone
-  - id: X_SCREWDRIVER
-    image: x_screwdriver.png
+  - id: SCREWDRIVER
+    image: screwdriver.png
     i18n:
-      de: Kreuzschraubenzieher
-      en: X Screwdriver
-  - id: FLAT_SCREWDRIVER
-    image: flat_screwdriver.png
-    i18n:
-      de: Schlitzschraubenzieher
-      en: Flat Screwdriver
-  - id: ALLEN_KEY
-    image: allen_key.png
-    i18n:
-      de: Imbus
-      en: Allen Key
-  - id: DRILL
-    image: drill.png
-    i18n:
-      de: Akkuschrauber
-      en: Drill
+      de: Schraubenzieher
+      en: Screwdriver
   - id: NUM_4
     image: 4.png
     i18n:
@@ -169,8 +179,8 @@ levels:
         - HELMET
         - SNOW_BOOTS
     i18n:
-      de: "Ski Urlaub"
-      en: "Ski Trip"
+      de: Skiurlaub
+      en: Ski Trip
   - id: HIKING
     solution:
       type: ALL
@@ -179,35 +189,48 @@ levels:
         - WATER_BOTTLE
         - HEAD_LIGHT
     i18n:
-      de: "Wandern Urlaub"
-      en: "Hiking Trip"
+      de: Wanderurlaub
+      en: Hiking Trip
+  - id: STUDY
+    solution:
+      type: ALL
+      items:
+        - BOOKS
+        - COMPUTER
+        - SEMESTER_TICKET
+    i18n:
+      de: Studium
+      en: Studies
   - id: CHINA
     solution:
       type: ALL
       items:
+        - AIRPLANE
         - HOT_POT
-        - VEGETABLES
         - CHOPSTICKS
     i18n:
-      de: "Reise nach China"
-      en: "Trip to China"
-  - id: RETURN
+      de: China-Reise
+      en: Trip to China
+  - id: LIVING_TOGETHER
     solution:
       type: ALL
       items:
-        - AIRPLANE
-        - TICKETS
+        - SOFA
+        - FRIDGE
+        - TABLE
+        - SYNTHESIZER
     i18n:
-      de: "Die Heimkehr"
-      en: "Return Home"
-  - id: PADLOCK
+      de: Gemeinsame Wohnung
+      en: Living Together
+  - id: SPORTS
     solution:
       type: ALL
       items:
-        - KEYS
+        - SURFBOARD
+        - RUNNING_SHOES
     i18n:
-      de: "Ein Vorhängeschloss"
-      en: "A Padlock"
+      de: Sport
+      en: Sports
   - id: TAPE
     solution:
       type: ALL
@@ -215,17 +238,8 @@ levels:
         - KNIFE
         - SHARP_STONE
     i18n:
-      de: "In Klebeband versiegelt"
-      en: "Sealed in Tape"
-  - id: SCREWS
-    solution:
-      type: ALL
-      items:
-        - X_SCREWDRIVER
-        - FLAT_SCREWDRIVER
-    i18n:
-      de: "Verschraubter Verschluss"
-      en: "Screwed Shut"
+      de: Paketband
+      en: Sealed in Tape
   - id: NUM_CODE
     solution:
       type: EXACT
@@ -235,5 +249,5 @@ levels:
         - NUM_20
         - NUM_13
     i18n:
-      de: "Code-Sperre"
-      en: "Code Lock"
+      de: Zahlenschloss
+      en: Code Lock
