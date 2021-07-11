@@ -56,8 +56,15 @@ func main() {
 		log.Fatalf("error: %v", err)
 	}
 
+	skipItems := map[string]bool{
+		"NULL": true,
+		"QR":   true,
+	}
 	language := "de"
 	for _, item := range adventure.Items {
+		if skipItems[item.ID] {
+			continue
+		}
 		gen(f, item.ID, item.Image, item.I18n[language], "card-tpl.png", "cards")
 		gen(f, item.ID, item.Image, item.I18n[language], "card-tpl-bg.png", "cards-bg")
 	}
@@ -235,6 +242,11 @@ func makeSprite(srcDir, name string) {
 	outFiles = append(outFiles, "-append", fmt.Sprintf("sprites/%s.png", name))
 	fmt.Println(outFiles)
 	cmd := exec.Command("convert", outFiles...)
+	if err := cmd.Run(); err != nil {
+		log.Fatalf("failed to sprite: %s", err)
+	}
+
+	cmd = exec.Command("convert", "+append", fmt.Sprintf("%s/*.png", srcDir), fmt.Sprintf("sprites/all_%s.png", name))
 	if err := cmd.Run(); err != nil {
 		log.Fatalf("failed to sprite: %s", err)
 	}

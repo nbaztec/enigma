@@ -181,16 +181,6 @@ levels:
     i18n:
       de: Skiurlaub
       en: Ski Trip
-  - id: HIKING
-    solution:
-      type: ALL
-      items:
-        - HIKE_BOOTS
-        - WATER_BOTTLE
-        - HEAD_LIGHT
-    i18n:
-      de: Wanderurlaub
-      en: Hiking Trip
   - id: STUDY
     solution:
       type: ALL
@@ -201,16 +191,16 @@ levels:
     i18n:
       de: Studium
       en: Studies
-  - id: CHINA
+  - id: HIKING
     solution:
       type: ALL
       items:
-        - AIRPLANE
-        - HOT_POT
-        - CHOPSTICKS
+        - HIKE_BOOTS
+        - WATER_BOTTLE
+        - HEAD_LIGHT
     i18n:
-      de: China-Reise
-      en: Trip to China
+      de: Wanderurlaub
+      en: Hiking Trip
   - id: LIVING_TOGETHER
     solution:
       type: ALL
@@ -222,6 +212,16 @@ levels:
     i18n:
       de: Gemeinsame Wohnung
       en: Living Together
+  - id: CHINA
+    solution:
+      type: ALL
+      items:
+        - AIRPLANE
+        - HOT_POT
+        - CHOPSTICKS
+    i18n:
+      de: China-Reise
+      en: Trip to China
   - id: SPORTS
     solution:
       type: ALL

@@ -435,63 +435,73 @@ class _GamePageState extends State<GamePage> {
         ),
       ));
 
-
   Widget _finishScreen(BuildContext context) => Scaffold(
-      appBar: AppBar(
-        title: Text('Enigma: ${l18n(context).solved}'),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: <Widget>[
-            _lisaAndBastianScreen(),
-            Column(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
-              SizedBox(
-                height: 150,
-                child: Image.asset('assets/images/gift.png'),
-              ),
-              Padding(
-                padding: EdgeInsets.fromLTRB(0, 50, 0, 0),
-                child: Text(
-                  l18n(context).congratulations,
-                  textScaleFactor: 2.0,
-                  style: TextStyle(fontWeight: FontWeight.bold),
+        appBar: AppBar(
+          title: Text('Enigma: ${l18n(context).solved}'),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: <Widget>[
+              _lisaAndBastianScreen(),
+              Column(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
+                SizedBox(
+                  height: 150,
+                  child: Image.asset('assets/images/gift.png'),
                 ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(0, 50, 0, 0),
+                  child: Text(
+                    l18n(context).congratulations,
+                    textScaleFactor: 2.0,
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ]),
+              const Divider(
+                height: 5,
+                thickness: 3,
+                indent: 20,
+                endIndent: 20,
               ),
-            ]),
-            const Divider(
-              height: 5,
-              thickness: 3,
-              indent: 20,
-              endIndent: 20,
+              SizedBox(height: 50),
+            ],
+          ),
+        ),
+        floatingActionButton: Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          spacing: 100,
+          children: [
+            FloatingActionButton(
+              backgroundColor: Colors.redAccent,
+              onPressed: _doGameReset,
+              heroTag: null,
+              tooltip: l18n(context).resetGame,
+              child: Icon(Icons.replay),
             ),
-            SizedBox(height: 50),
           ],
         ),
-      ),
-      floatingActionButton: Wrap(
-        alignment: WrapAlignment.spaceBetween,
-        spacing: 100,
-        children: [
-          FloatingActionButton(
-            backgroundColor: Colors.redAccent,
-            onPressed: _doGameReset,
-            heroTag: null,
-            tooltip: l18n(context).resetGame,
-            child: Icon(Icons.replay),
-          ),
-        ],
-      ),
-    );
+      );
 
   Widget _gameScreen(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title:
-            _levelIndex < adventure.levels.length ? Text('${l18n(context).stage}: ${adventure.levels[_levelIndex].name(locale(context))}') : Text(''),
+    return WillPopScope(
+      onWillPop: () async {
+        if (_scanMode == _ScanMode.none) {
+          return Future.value(true);
+        } else {
+          _cancelScan();
+          return Future.value(false);
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: _levelIndex < adventure.levels.length
+              ? Text('${l18n(context).stage}: ${adventure.levels[_levelIndex].name(locale(context))}')
+              : Text(''),
+        ),
+        body: _scanMode == _ScanMode.none ? _playScreen(context) : _scanScreen(context),
+        floatingActionButton: _scanMode == _ScanMode.none ? _buttonsPlayScreen() : _buttonsScanScreen(),
       ),
-      body: _scanMode == _ScanMode.none ? _playScreen(context) : _scanScreen(context),
-      floatingActionButton: _scanMode == _ScanMode.none ? _buttonsPlayScreen() : _buttonsScanScreen(),
     );
   }
 
@@ -517,7 +527,39 @@ class _GamePageState extends State<GamePage> {
             child: Icon(Icons.check),
           ),
           GestureDetector(
-            onLongPress: _scanResetGame,
+            onLongPress: () {
+              Widget cancelButton = TextButton(
+                child: Text(l18n(context).cancel),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              );
+              Widget continueButton = TextButton(
+                child: Text(l18n(context).yes),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  _scanResetGame();
+                },
+              );
+
+              // set up the AlertDialog
+              AlertDialog alert = AlertDialog(
+                title: Text(l18n(context).warning),
+                content: Text(l18n(context).warningGameReset),
+                actions: [
+                  cancelButton,
+                  continueButton,
+                ],
+              );
+
+              // show the dialog
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return alert;
+                },
+              );
+            },
             child: FloatingActionButton(
               backgroundColor: Colors.red,
               onPressed: _scanResetLevel,
@@ -631,28 +673,27 @@ class _GamePageState extends State<GamePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
-            (() {
-              switch (_scanMode) {
-                case _ScanMode.verify:
-                  return Text(
-                    adventure.items[adventure.specialItems.check]!.name(locale(context)),
-                    textScaleFactor: 1.5,
-                  );
-                case _ScanMode.resetLevel:
-                case _ScanMode.resetGame:
-                  return Text(
-                    adventure.items[adventure.specialItems.reset]!.name(locale(context)),
-                    textScaleFactor: 1.5,
-                  );
-                case _ScanMode.item:
-                  return Text(
-                    '${l18n(context).slot}: #${_scanIndex + 1}}',
-                    textScaleFactor: 1.5,
-                  );
-                default:
-                  return Text('');
-              }
-            })(),
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: 10, horizontal: 0),
+              child: Text(
+                (() {
+                  switch (_scanMode) {
+                    case _ScanMode.verify:
+                      return '${l18n(context).verify}: ${adventure.items[adventure.specialItems.check]!.name(locale(context))}';
+                    case _ScanMode.resetLevel:
+                      return '${l18n(context).resetLevel}: ${adventure.items[adventure.specialItems.reset]!.name(locale(context))}';
+                    case _ScanMode.resetGame:
+                      return '${l18n(context).resetGame}: ${adventure.items[adventure.specialItems.reset]!.name(locale(context))}';
+                    case _ScanMode.item:
+                      return '${l18n(context).slot}: #${_scanIndex + 1}';
+                    default:
+                      return '';
+                  }
+                })(),
+                textScaleFactor: 1.5,
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
             Expanded(flex: 4, child: _qrView(context)),
           ],
         ),
