@@ -255,13 +255,23 @@ class _GamePageState extends State<GamePage> {
 
   Widget _qrView(BuildContext context) {
     // For this example we check how width or tall the device is and change the scanArea and overlay accordingly.
-    var scanArea = (MediaQuery.of(context).size.width < 400 || MediaQuery.of(context).size.height < 400) ? 150.0 : 300.0;
+    var scanArea = (MediaQuery
+        .of(context)
+        .size
+        .width < 400 || MediaQuery
+        .of(context)
+        .size
+        .height < 400) ? 150.0 : 300.0;
     // To ensure the Scanner view is properly sizes after rotation
     // we need to listen for Flutter SizeChanged notification and update controller
     return QRView(
       key: qrKey,
       onQRViewCreated: _onQRViewCreated,
-      overlay: QrScannerOverlayShape(borderColor: Colors.red, borderRadius: 10, borderLength: 30, borderWidth: 10, cutOutSize: scanArea),
+      overlay: QrScannerOverlayShape(borderColor: Colors.red,
+          borderRadius: 10,
+          borderLength: 30,
+          borderWidth: 10,
+          cutOutSize: scanArea),
     );
   }
 
@@ -400,42 +410,44 @@ class _GamePageState extends State<GamePage> {
     return _gameOver ? _finishScreen(context) : _gameScreen(context);
   }
 
-  _startScreen(BuildContext context) => Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(l18n(context).enigma),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            Image.asset(
-              'assets/images/enigma.png',
-              height: 256,
+  _startScreen(BuildContext context) =>
+      Scaffold(
+          appBar: AppBar(
+            // Here we take the value from the MyHomePage object that was created by
+            // the App.build method, and use it to set our appbar title.
+            title: Text(l18n(context).enigma),
+          ),
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                Image.asset(
+                  'assets/images/enigma.png',
+                  height: 256,
+                ),
+                // Text(adventure.name),
+                Column(children: [
+                  _lisaAndBastianScreen(),
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(0, 10, 0, 0),
+                    child: Text('EDITION', style: const TextStyle(fontSize: 12, color: Colors.black38)),
+                  ),
+                ]),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _startup = false;
+                    });
+                  },
+                  child: _levelIndex == 0 && _itemCount == MAX_ITEMS ? Text(l18n(context).begin) : Text(l18n(context).resume),
+                  style: ElevatedButton.styleFrom(textStyle: const TextStyle(fontSize: 50)),
+                )
+              ],
             ),
-            // Text(adventure.name),
-            Column(children: [
-              _lisaAndBastianScreen(),
-              Padding(
-                padding: EdgeInsets.fromLTRB(0, 10, 0, 0),
-                child: Text('EDITION', style: const TextStyle(fontSize: 12, color: Colors.black38)),
-              ),
-            ]),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _startup = false;
-                });
-              },
-              child: _levelIndex == 0 && _itemCount == MAX_ITEMS ? Text(l18n(context).begin) : Text(l18n(context).resume),
-              style: ElevatedButton.styleFrom(textStyle: const TextStyle(fontSize: 50)),
-            )
-          ],
-        ),
-      ));
+          ));
 
-  Widget _finishScreen(BuildContext context) => Scaffold(
+  Widget _finishScreen(BuildContext context) =>
+      Scaffold(
         appBar: AppBar(
           title: Text('Enigma: ${l18n(context).solved}'),
         ),
@@ -474,7 +486,10 @@ class _GamePageState extends State<GamePage> {
           children: [
             FloatingActionButton(
               backgroundColor: Colors.redAccent,
-              onPressed: _doGameReset,
+              // onPressed: _doGameReset,
+              onPressed: () {
+                _confirmScanResetGame(false);
+              },
               heroTag: null,
               tooltip: l18n(context).resetGame,
               child: Icon(Icons.replay),
@@ -505,7 +520,8 @@ class _GamePageState extends State<GamePage> {
     );
   }
 
-  Widget _lisaAndBastianScreen() => Row(
+  Widget _lisaAndBastianScreen() =>
+      Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text('Lisa ', style: const TextStyle(fontSize: 30, fontFamily: 'Parisienne')),
@@ -514,7 +530,46 @@ class _GamePageState extends State<GamePage> {
         ],
       );
 
-  _buttonsPlayScreen() => Wrap(
+  _confirmScanResetGame(bool scanBeforeReset) {
+    Widget cancelButton = TextButton(
+      child: Text(l18n(context).cancel),
+      onPressed: () {
+        Navigator.of(context).pop();
+      },
+    );
+    Widget continueButton = TextButton(
+      child: Text(l18n(context).yes),
+      onPressed: () {
+        Navigator.of(context).pop();
+        if (scanBeforeReset) {
+          _scanResetGame();
+        } else {
+          _doGameReset();
+        }
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text(l18n(context).warning),
+      content: Text(l18n(context).warningGameReset),
+      actions: [
+        cancelButton,
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
+  _buttonsPlayScreen() =>
+      Wrap(
         // mainAxisAlignment: MainAxisAlignment.spaceBetween,
         alignment: WrapAlignment.spaceBetween,
         spacing: 100,
@@ -528,37 +583,7 @@ class _GamePageState extends State<GamePage> {
           ),
           GestureDetector(
             onLongPress: () {
-              Widget cancelButton = TextButton(
-                child: Text(l18n(context).cancel),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              );
-              Widget continueButton = TextButton(
-                child: Text(l18n(context).yes),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  _scanResetGame();
-                },
-              );
-
-              // set up the AlertDialog
-              AlertDialog alert = AlertDialog(
-                title: Text(l18n(context).warning),
-                content: Text(l18n(context).warningGameReset),
-                actions: [
-                  cancelButton,
-                  continueButton,
-                ],
-              );
-
-              // show the dialog
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return alert;
-                },
-              );
+              _confirmScanResetGame(true);
             },
             child: FloatingActionButton(
               backgroundColor: Colors.red,
@@ -570,7 +595,8 @@ class _GamePageState extends State<GamePage> {
         ],
       );
 
-  _buttonsScanScreen() => FloatingActionButton(
+  _buttonsScanScreen() =>
+      FloatingActionButton(
         backgroundColor: Colors.blue,
         onPressed: _cancelScan,
         tooltip: l18n(context).cancel,
@@ -578,7 +604,8 @@ class _GamePageState extends State<GamePage> {
         child: Icon(Icons.arrow_back),
       );
 
-  _playScreen(BuildContext context) => Center(
+  _playScreen(BuildContext context) =>
+      Center(
         // Center is a layout widget. It takes a single child and positions it
         // in the middle of the parent.
         child: Column(
@@ -651,7 +678,10 @@ class _GamePageState extends State<GamePage> {
                 Text('${l18n(context).itemsLeftYouNeed} '),
                 Text(
                   '${_solutionItemCount()}',
-                  style: Theme.of(context).textTheme.headline5,
+                  style: Theme
+                      .of(context)
+                      .textTheme
+                      .headline5,
                 ),
                 Text(' ${_solutionItemCount() == 1 ? l18n(context).item : l18n(context).items} ${l18n(context).itemsLeftSucceed}'),
               ],
@@ -669,7 +699,8 @@ class _GamePageState extends State<GamePage> {
 
   _solutionItemCount() => adventure.levels[_levelIndex].solution.items.length;
 
-  _scanScreen(BuildContext context) => Center(
+  _scanScreen(BuildContext context) =>
+      Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
